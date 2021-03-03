@@ -119,17 +119,23 @@ module.exports = (env) ->
             when dev.type == "Window covering device" then "RaspBeeCover"
             when dev.type == "Window covering controller" then "RaspBeeCover"
             when dev.type == "Warning device" then "RaspBeeWarning"
-          if @lclass == "RaspbeeSmartSwitch"
+          if @lclass == "RaspBeeSmartSwitch"
+            env.logger.debug "tot hier"
             @addToCollection(i, dev)
             config = {
               class: @lclass,
               name: dev.name,
               id: "raspbee_s#{dev.etag}#{i}",
               deviceID: i,
-              sensorIDs: @sensorCollection[i].ids,
-              configMap: @sensorCollection[i].config,
-              supports: JSON.parse(JSON.stringify(@sensorCollection[i].supports))
             }
+            if dev.uniqueid?
+              uniqueid = dev.uniqueid.split('-')
+              uniqueid = uniqueid[0].replace(/:/g,'')
+              config["sensorIDs"] = @sensorCollection[uniqueid].ids
+              config["configMap"] = @sensorCollection[uniqueid].config
+              config["supports"] = JSON.parse(JSON.stringify(@sensorCollection[uniqueid].supports))
+
+            env.logger.debug("SmartSwitch: " + config)
             if not @inConfig(i, @lclass)
               @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "SmartSwitch: #{config.name} - #{dev.modelid}", config )
           else if @lclass == "RaspbeeCover"
@@ -220,13 +226,13 @@ module.exports = (env) ->
             config: []
             supportsBattery: false
         @sensorCollection[uniqueid].ids.push(parseInt(id))
-        if (device.config.battery?)
+        if (device.config?.battery?)
           @sensorCollection[uniqueid].supportsBattery=true
         if (device.type == "ZHASwitch")
           @sensorCollection[uniqueid].supports.push('switch')
         if (device.state.alarm?)
           @sensorCollection[uniqueid].supports.push('alarm')
-        if (device.config.temperature?) or (device.state.temperature?)
+        if (device.config?.temperature?) or (device.state.temperature?)
           @sensorCollection[uniqueid].supports.push('temperature')
         if (device.state.dark?)
           @sensorCollection[uniqueid].supports.push('dark')
