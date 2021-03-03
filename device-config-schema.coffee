@@ -172,6 +172,7 @@ module.exports = {
   RaspBeeSmartSwitch: {
     title: "Raspbee Switch Device"
     type: "object"
+    extensions: ["xAttributeOptions"]
     properties:
       deviceID:
         description: "Raspbee address"
