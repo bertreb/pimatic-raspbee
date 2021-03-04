@@ -1037,7 +1037,7 @@ module.exports = (env) ->
       @attributes.state["hidden"] = true
 
       if "voltage" in @config.supports
-        @_voltage = lastState?.voltage?.value
+        @_voltage = lastState?.voltage?.value ? 0
         @attributes.voltage = {
           description: "the measured voltage"
           type: "number"
@@ -1045,7 +1045,7 @@ module.exports = (env) ->
           acronym: 'voltage'
         }
       if "current" in @config.supports
-        @_current = lastState?.current?.value
+        @_current = lastState?.current?.value ? 0
         @attributes.current = {
           description: "the measured current"
           type: "number"
@@ -1053,7 +1053,7 @@ module.exports = (env) ->
           acronym: 'current'
         }
       if "power" in @config.supports
-        @_power = lastState?.power?.value
+        @_power = lastState?.power?.value ? 0
         @attributes.power = {
           description: "the measured power"
           type: "number"
@@ -1061,7 +1061,7 @@ module.exports = (env) ->
           acronym: 'power'
         }
       if "consumption" in @config.supports
-        @_consumption = lastState?.consumption?.value
+        @_consumption = lastState?.consumption?.value ? 0
         @attributes.consumption = {
           description: "the measured consumption"
           type: "number"
