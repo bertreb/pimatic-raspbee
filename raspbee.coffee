@@ -1027,6 +1027,7 @@ module.exports = (env) ->
       @id = @config.id
       @name = @config.name
       @deviceID = @config.deviceID
+      @sensorIDs = @config.sensorIDs
       @_presence = lastState?.presence?.value or false
       @_state = lastState?.state?.value or off
 
