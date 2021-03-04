@@ -1071,7 +1071,7 @@ module.exports = (env) ->
 
       super()
       myRaspBeePlugin.on "event", (data) =>
-        if (data.resource is "lights" or data.resource is "sensors") and data.id is @deviceID and data.event is "changed"
+        if (data.resource is "lights" or data.resource is "sensors") and (data.id in @sensorIDs or data.id is @deviceID) and data.event is "changed"
           @parseEvent(data)
 
       @getInfos()
