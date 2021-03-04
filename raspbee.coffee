@@ -120,20 +120,15 @@ module.exports = (env) ->
             when dev.type == "Window covering controller" then "RaspBeeCover"
             when dev.type == "Warning device" then "RaspBeeWarning"
           if @lclass == "RaspBeeSmartSwitch"
-            env.logger.debug "tot hier"
-            @addToCollection(i, dev)
             config = {
               class: @lclass,
               name: dev.name,
               id: "raspbee_s#{dev.etag}#{i}",
               deviceID: i,
             }
-            if dev.uniqueid?
-              uniqueid = dev.uniqueid.split('-')
-              uniqueid = uniqueid[0].replace(/:/g,'')
-              config["sensorIDs"] = @sensorCollection[uniqueid].ids
-              config["configMap"] = @sensorCollection[uniqueid].config
-              config["supports"] = JSON.parse(JSON.stringify(@sensorCollection[uniqueid].supports))
+            #config["sensorIDs"] = []
+            #config["configMap"] = []
+            config["supports"] = ["voltage","current","power","consumption"]
 
             env.logger.debug("SmartSwitch: " + config)
             if not @inConfig(i, @lclass)
@@ -1038,24 +1033,9 @@ module.exports = (env) ->
       @addAttribute  'presence',
         description: "online status",
         type: t.boolean
+        hidden: false
       @attributes.state["hidden"] = true
 
-      if "power" in @config.supports
-        @_power = lastState?.power?.value
-        @attributes.power = {
-          description: "the measured power"
-          type: "number"
-          unit: 'W'
-          acronym: 'power'
-        }
-      if "consumption" in @config.supports
-        @_consumption = lastState?.consumption?.value
-        @attributes.consumption = {
-          description: "the measured consumption"
-          type: "number"
-          unit: 'Wh'
-          acronym: 'consumption'
-        }
       if "voltage" in @config.supports
         @_voltage = lastState?.voltage?.value
         @attributes.voltage = {
@@ -1072,10 +1052,26 @@ module.exports = (env) ->
           unit: 'mA'
           acronym: 'current'
         }
+      if "power" in @config.supports
+        @_power = lastState?.power?.value
+        @attributes.power = {
+          description: "the measured power"
+          type: "number"
+          unit: 'W'
+          acronym: 'power'
+        }
+      if "consumption" in @config.supports
+        @_consumption = lastState?.consumption?.value
+        @attributes.consumption = {
+          description: "the measured consumption"
+          type: "number"
+          unit: 'Wh'
+          acronym: 'consumption'
+        }
 
       super()
       myRaspBeePlugin.on "event", (data) =>
-        if data.resource is "lights" and data.id is @deviceID and data.event is "changed"
+        if (data.resource is "lights" or data.resource is "sensors") and data.id is @deviceID and data.event is "changed"
           @parseEvent(data)
 
       @getInfos()
@@ -1093,9 +1089,6 @@ module.exports = (env) ->
     parseEvent: (data) ->
       env.logger.debug "Debug raspbee-smart-switch data: " + JSON.stringify(data,null,2)
       @_setPresence(data.state.reachable) if data.state?.reachable?
-      @_setState(data.state.on)
-
-    _updateAttributes: (data,first=false) ->
       @_setState(data.state.on) if data.state?.on?
       @_setConsumption(data.state.consumption) if data.state?.consumption?
       @_setCurrent(data.state.current) if data.state?.current?
