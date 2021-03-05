@@ -2001,18 +2001,17 @@ module.exports = (env) ->
       env.logger.debug "moveTo: " + _currentPosition + ", target: " + _targetPosition + ", _transitSeconds: " + _transitSeconds + ", _positionStep: " + _positionStep
 
       updatePosition = () =>
-        if ((@_position < _targetPosition) and (@_position + _positionStep <= _targetPosition)) or ((@_position > _targetPosition) and (@_position + _positionStep >= _targetPosition))
-          @_setPosition(@_position + _positionStep)
-          env.logger.debug "updatePosition: " + (@_position + _positionStep)
-          @getPosition()
-          .then (position)=>
-            env.logger.debug "Position: " + position 
+        @getPosition()
+        .then (_position) =>
+          if ((_position < _targetPosition) and (_position + _positionStep <= _targetPosition)) or ((_position > _targetPosition) and (_position + _positionStep >= _targetPosition))
+            @_setPosition(_position + _positionStep)
+            env.logger.debug "updatePosition: " + (_position + _positionStep)
             @positionTimer = setTimeout(updatePosition,1000)
-        else
-          if send
-            @stopCoverSend()
           else
-            @stopCover()
+            if send
+              @stopCoverSend()
+            else
+              @stopCover()
       updatePosition()
 
     stopCover:() =>
