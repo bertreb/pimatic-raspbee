@@ -104,6 +104,14 @@ module.exports = (env) ->
       if not @inConfig(config.deviceID, config.class)
         @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "Gateway: #{config.name}", config )
 
+      @Connector.getSensor().then((devices)=>
+        env.logger.debug("sensor list")
+        env.logger.debug(devices)
+        for i of devices
+          dev=devices[i]
+          @addToCollection(i, dev)
+        @discoverMultiSensors()
+      )
       @Connector.getLight().then((devices)=>
         env.logger.debug("light list")
         env.logger.debug(devices)
@@ -120,19 +128,21 @@ module.exports = (env) ->
             when dev.type == "Window covering controller" then "RaspBeeCover"
             when dev.type == "Warning device" then "RaspBeeWarning"
           if @lclass == "RaspBeeSmartSwitch"
-            config = {
-              class: @lclass,
-              name: dev.name,
-              id: "raspbee_s#{dev.etag}#{i}",
-              deviceID: i,
-            }
-            #config["sensorIDs"] = []
-            #config["configMap"] = []
-            config["supports"] = ["voltage","current","power","consumption"]
-
-            env.logger.debug("SmartSwitch: " + config)
-            if not @inConfig(i, @lclass)
-              @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "SmartSwitch: #{config.name} - #{dev.modelid}", config )
+            if dev.uniqueid?
+              uniqueid = dev.uniqueid.split('-')
+              uniqueid = uniqueid[0].replace(/:/g,'')
+              config = {
+                class: @lclass,
+                name: dev.name,
+                id: "raspbee_s#{dev.etag}#{i}",
+                deviceID: i,
+              }
+              if @sensorCollection[uniqueid]?
+                config["sensorIDs"] = @sensorCollection[uniqueid].ids if @sensorCollection[uniqueid]?.ids?
+                config["configMap"] = @sensorCollection[uniqueid].config if @sensorCollection[uniqueid]?.config?
+                config["supports"] = @sensorCollection[uniqueid].supports if @sensorCollection[uniqueid]?.supports?
+              if not @inConfig(i, @lclass)
+                @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "SmartSwitch: #{config.name} - #{dev.modelid}", config )
           else if @lclass == "RaspbeeCover"
             config = {
               class: @lclass,
@@ -161,14 +171,6 @@ module.exports = (env) ->
             if not @inConfig(i, @lclass)
               @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "Light: #{config.name} - #{dev.modelid}", config )
 
-      )
-      @Connector.getSensor().then((devices)=>
-        env.logger.debug("sensor list")
-        env.logger.debug(devices)
-        for i of devices
-          dev=devices[i]
-          @addToCollection(i, dev)
-        @discoverMultiSensors()
       )
       @Connector.getGroup().then((devices)=>
         env.logger.debug("group list")
@@ -1072,8 +1074,10 @@ module.exports = (env) ->
 
       super()
       myRaspBeePlugin.on "event", (data) =>
-        if (data.resource is "lights" or data.resource is "sensors") and (data.id in @sensorIDs or data.id is @deviceID) and data.event is "changed"
-          @parseEvent(data)
+        if data.resource is "lights" and data.id is @deviceID and data.event is "changed"
+          @parseLightEvent(data)
+        if data.resource is "sensors" and data.id in @sensorIDs and data.event is "changed"
+          @parseSensorEvent(data)
 
       @getInfos()
       myRaspBeePlugin.on "ready", () =>
@@ -1082,15 +1086,24 @@ module.exports = (env) ->
     getInfos: ->
       if (myRaspBeePlugin.ready)
         myRaspBeePlugin.Connector.getLight(@deviceID).then( (res) =>
-          @parseEvent(res)
+          @parseLightEvent(res)
         ).catch( (error) =>
           env.logger.error (error)
         )
+        for id in @sensorIDs
+          myRaspBeePlugin.Connector.getSensor(id).then((res) =>
+            @parseSensorEvent(res)
+          ).catch( (error) =>
+            env.logger.error (error)
+          )
 
-    parseEvent: (data) ->
-      env.logger.debug "Debug raspbee-smart-switch data: " + JSON.stringify(data,null,2)
+    parseLightEvent: (data) ->
+      #env.logger.debug "Debug raspbee-smart-switch light-data: " + JSON.stringify(data,null,2)
       @_setPresence(data.state.reachable) if data.state?.reachable?
       @_setState(data.state.on) if data.state?.on?
+
+    parseSensorEvent: (data)->
+      #env.logger.debug "Debug raspbee-smart-switch sensor-data: " + JSON.stringify(data,null,2)
       @_setConsumption(data.state.consumption) if data.state?.consumption?
       @_setCurrent(data.state.current) if data.state?.current?
       @_setPower(data.state.power) if data.state?.power?
