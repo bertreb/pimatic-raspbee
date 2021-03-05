@@ -111,8 +111,9 @@ module.exports = (env) ->
           dev=devices[i]
           @addToCollection(i, dev)
         @discoverMultiSensors()
+        return @Connector.getLight()
       )
-      @Connector.getLight().then((devices)=>
+      .then((devices)=>
         env.logger.debug("light list")
         env.logger.debug(devices)
         for i of devices
@@ -143,7 +144,7 @@ module.exports = (env) ->
                 config["supports"] = @sensorCollection[uniqueid].supports if @sensorCollection[uniqueid]?.supports?
               if not @inConfig(i, @lclass)
                 @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "SmartSwitch: #{config.name} - #{dev.modelid}", config )
-          else if @lclass == "RaspbeeCover"
+          else if @lclass == "RaspBeeCover"
             config = {
               class: @lclass,
               name: dev.name,
@@ -170,9 +171,9 @@ module.exports = (env) ->
             }
             if not @inConfig(i, @lclass)
               @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "Light: #{config.name} - #{dev.modelid}", config )
-
+        return @Connector.getGroup()
       )
-      @Connector.getGroup().then((devices)=>
+      .then((devices)=>
         env.logger.debug("group list")
         env.logger.debug(devices)
         for i of devices
