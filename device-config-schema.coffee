@@ -403,5 +403,9 @@ module.exports = {
       deviceID:
         description: "Raspbee address"
         type: "integer"
+      tampered:
+        description: "Use the tampered option"
+        type: "boolean"
+        default: false
   }
 }
