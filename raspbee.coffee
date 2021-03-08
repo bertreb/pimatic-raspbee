@@ -146,10 +146,9 @@ module.exports = (env) ->
                 id: "raspbee_s#{dev.etag}#{i}",
                 deviceID: i,
               }
-              if @sensorCollection[uniqueid]?
-                config["sensorIDs"] = @sensorCollection[uniqueid].ids if @sensorCollection[uniqueid]?.ids?
-                config["configMap"] = @sensorCollection[uniqueid].config if @sensorCollection[uniqueid]?.config?
-                config["supports"] = @sensorCollection[uniqueid].supports if @sensorCollection[uniqueid]?.supports?
+              config["sensorIDs"] = if @sensorCollection[uniqueid]?.ids? then @sensorCollection[uniqueid].ids else []
+              config["configMap"] = if @sensorCollection[uniqueid]?.config? then @sensorCollection[uniqueid].config else []
+              config["supports"] = if @sensorCollection[uniqueid]?.supports? then @sensorCollection[uniqueid].supports else []
               if not @inConfig(i, @lclass)
                 @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "SmartSwitch: #{config.name} - #{dev.modelid}", config )
           else if @lclass == "RaspBeeCover"
@@ -171,10 +170,9 @@ module.exports = (env) ->
                 id: "raspbee_w#{dev.etag}#{i}",
                 deviceID: i,
               }
-              if @sensorCollection[uniqueid]?
-                config["sensorIDs"] = @sensorCollection[uniqueid].ids if @sensorCollection[uniqueid]?.ids?
-                config["configMap"] = @sensorCollection[uniqueid].config if @sensorCollection[uniqueid]?.config?
-                config["supports"] = @sensorCollection[uniqueid].supports if @sensorCollection[uniqueid]?.supports?
+              config["sensorIDs"] = if @sensorCollection[uniqueid]?.ids? then @sensorCollection[uniqueid].ids else []
+              config["configMap"] = if @sensorCollection[uniqueid]?.config? then @sensorCollection[uniqueid].config else []
+              config["supports"] = if @sensorCollection[uniqueid]?.supports? then @sensorCollection[uniqueid].supports else []
               if not @inConfig(i, @lclass)
                 @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "Warning: #{config.name} - #{dev.modelid}", config )
           else
