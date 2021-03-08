@@ -72,6 +72,12 @@ module.exports = (env) ->
           mobileFrontend.registerAssetFile 'css',  "pimatic-raspbee/app/raspbee-template.css"
           mobileFrontend.registerAssetFile 'js',  "pimatic-raspbee/app/spectrum.js"
           mobileFrontend.registerAssetFile 'css',  "pimatic-raspbee/app/spectrum.css"
+        #t
+        if ( @apikey == "" or @apikey == undefined or @apikey == null)
+          env.logger.error ("api key is not set! perform a device discovery to generate a new one")
+        else
+          @connect()
+
 
       @framework.deviceManager.on 'discover', (eventData) =>
         if (! @ready)
@@ -88,10 +94,12 @@ module.exports = (env) ->
         else
           @scan()
 
+      ###
       if ( @apikey == "" or @apikey == undefined or @apikey == null)
         env.logger.error ("api key is not set! perform a device discovery to generate a new one")
       else
         @connect()
+      ###
 
     scan:() =>
       @sensorCollection = {}
@@ -2139,6 +2147,7 @@ module.exports = (env) ->
       @id = @config.id
       @name = @config.name
       @deviceID = @config.deviceID
+      @sensorIDs = @config.sensorIDs
       @_presence = lastState?.presence?.value or false
       @_battery= lastState?.battery?.value or 0
       @_warning = "off" # lastState?.warning?.value ? "stop" # is warning off
