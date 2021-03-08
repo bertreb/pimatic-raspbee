@@ -137,20 +137,20 @@ module.exports = (env) ->
             when dev.type == "Window covering controller" then "RaspBeeCover"
             when dev.type == "Warning device" then "RaspBeeWarning"
           if @lclass == "RaspBeeSmartSwitch"
+            config = {
+              class: @lclass,
+              name: dev.name,
+              id: "raspbee_s#{dev.etag}#{i}",
+              deviceID: i,
+            }
             if dev.uniqueid?
               uniqueid = dev.uniqueid.split('-')
               uniqueid = uniqueid[0].replace(/:/g,'')
-              config = {
-                class: @lclass,
-                name: dev.name,
-                id: "raspbee_s#{dev.etag}#{i}",
-                deviceID: i,
-              }
               config["sensorIDs"] = if @sensorCollection[uniqueid]?.ids? then @sensorCollection[uniqueid].ids else []
               config["configMap"] = if @sensorCollection[uniqueid]?.config? then @sensorCollection[uniqueid].config else []
               config["supports"] = if @sensorCollection[uniqueid]?.supports? then @sensorCollection[uniqueid].supports else []
-              if not @inConfig(i, @lclass)
-                @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "SmartSwitch: #{config.name} - #{dev.modelid}", config )
+            if not @inConfig(i, @lclass)
+              @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "SmartSwitch: #{config.name} - #{dev.modelid}", config )
           else if @lclass == "RaspBeeCover"
             config = {
               class: @lclass,
@@ -161,20 +161,20 @@ module.exports = (env) ->
             if not @inConfig(i, @lclass)
               @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "Cover: #{config.name} - #{dev.modelid}", config )
           else if @lclass == "RaspBeeWarning"
+            config = {
+              class: @lclass,
+              name: dev.name,
+              id: "raspbee_w#{dev.etag}#{i}",
+              deviceID: i,
+            }
             if dev.uniqueid?
               uniqueid = dev.uniqueid.split('-')
               uniqueid = uniqueid[0].replace(/:/g,'')
-              config = {
-                class: @lclass,
-                name: dev.name,
-                id: "raspbee_w#{dev.etag}#{i}",
-                deviceID: i,
-              }
               config["sensorIDs"] = if @sensorCollection[uniqueid]?.ids? then @sensorCollection[uniqueid].ids else []
               config["configMap"] = if @sensorCollection[uniqueid]?.config? then @sensorCollection[uniqueid].config else []
               config["supports"] = if @sensorCollection[uniqueid]?.supports? then @sensorCollection[uniqueid].supports else []
-              if not @inConfig(i, @lclass)
-                @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "Warning: #{config.name} - #{dev.modelid}", config )
+            if not @inConfig(i, @lclass)
+              @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "Warning: #{config.name} - #{dev.modelid}", config )
           else
             config = {
               class: @lclass,
