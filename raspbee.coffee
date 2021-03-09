@@ -141,7 +141,7 @@ module.exports = (env) ->
               class: @lclass,
               name: dev.name,
               id: "raspbee_s#{dev.etag}#{i}",
-              deviceID: i,
+              deviceID: i
             }
             if dev.uniqueid?
               uniqueid = dev.uniqueid.split('-')
@@ -173,6 +173,7 @@ module.exports = (env) ->
               config["sensorIDs"] = if @sensorCollection[uniqueid]?.ids? then @sensorCollection[uniqueid].ids else []
               config["configMap"] = if @sensorCollection[uniqueid]?.config? then @sensorCollection[uniqueid].config else []
               config["supports"] = if @sensorCollection[uniqueid]?.supports? then @sensorCollection[uniqueid].supports else []
+              config["supportsBattery"] = @sensorCollection[uniqueid].supportsBattery if @sensorCollection[uniqueid]?.supportsBattery?
             if not @inConfig(i, @lclass)
               @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "Warning: #{config.name} - #{dev.modelid}", config )
           else
@@ -2146,30 +2147,44 @@ module.exports = (env) ->
       @deviceID = @config.deviceID
       @sensorIDs = @config.sensorIDs ? []
       @_presence = lastState?.presence?.value or false
-      @_battery= lastState?.battery?.value or 0
-      @_warning = "off" # lastState?.warning?.value ? "stop" # is warning off
-      @_alarm = lastState?.alarm?.value ? false
-      @_tampered = lastState?.tampered?.value ? false 
+      @_warning = "off" #lastState?.warning?.value ? "off" # is warning off
       @tamperedEnabled = @config.tampered ? false
 
       @addAttribute  'presence',
         description: "online status",
-        type: t.boolean
+        type: "boolean"
         labels: ['online', 'offline']
         hidden: false
       @addAttribute  'warning',
         description: "warning action (stop, blink, select)",
-        type: t.string
+        type: "string"
         hidden: true
-      @addAttribute  'tampered',
-        description: "tampered",
-        type: t.boolean
-        acronym: "tampered"
-        hidden: not @tamperedEnabled
-      @addAttribute  'alarm',
-        description: "alarm",
-        type: t.boolean
-        acronym: "alarm"
+
+      if "alarm" in @config.supports
+        @_alarm = lastState?.alarm?.value ? false
+        @attributes.alarm = {
+          description: "alarm detected"
+          type: "boolean"
+          labels: ['active', 'off']
+          acronym: "alarm"
+        }
+      if "tampered" in @config.supports
+        @_tampered = lastState?.tampered?.value ? false
+        @attributes.tampered = {
+          description: "tampered detection"
+          type: "boolean"
+          labels: ['true', 'false']
+          acronym: "tampered"
+          hidden: not @tamperedEnabled
+        }
+      if "lowbattery" in @config.supports
+        @_lowbattery = lastState?.lowbattery?.value ? false
+        @attributes.lowbattery = {
+          description: "low battery detection"
+          type: "boolean"
+          labels: ['low', 'ok']
+          acronym: "battery"
+        }
 
       super()
       myRaspBeePlugin.on "event", (data) =>
@@ -2205,6 +2220,7 @@ module.exports = (env) ->
       #env.logger.debug "Debug raspbee-warning sensor-data: " + JSON.stringify(data,null,2)
       @_setTampered(data.state.tampered) if data.state?.tampered?
       @_setAlarm(data.state.alarm) if data.state?.alarm?
+      @_setLowbattery(data.state.lowbattery) if data.state?.lowbattery?
 
     destroy: ->
       super()
@@ -2234,6 +2250,12 @@ module.exports = (env) ->
       @_alarm = value
       @emit 'alarm', value
     getAlarm: -> Promise.resolve(@_alarm)
+
+    _setLowbattery: (value) ->
+      if @_lowbattery is value then return
+      @_lowbattery = value
+      @emit 'lowbattery', value
+    getLowBattery: -> Promise.resolve(@_lowbattery)
 
     changeWarningTo: (warning, time) ->
       env.logger.debug "ChangeWarningTo " + warning
