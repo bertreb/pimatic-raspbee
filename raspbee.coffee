@@ -2,9 +2,17 @@ module.exports = (env) ->
 
   Promise = env.require 'bluebird'
   assert = env.require 'cassert'
-  t = env.require('decl-api').types
+  #t = env.require('decl-api').types
   Color = require('./color')(env)
   path = require('path')
+
+  t =
+    number: "number"
+    string: "string"
+    array: "array"
+    date: "date"
+    object: "object"
+    boolean: "boolean"
 
   RaspBeeConnection = require('./raspbee-connector')(env)
   RaspBeeAction = require('./action.coffee')(env)
@@ -166,6 +174,7 @@ module.exports = (env) ->
               name: dev.name,
               id: "raspbee_w#{dev.etag}#{i}",
               deviceID: i,
+              supportsBattery: false
             }
             if dev.uniqueid?
               uniqueid = dev.uniqueid.split('-')
@@ -173,6 +182,7 @@ module.exports = (env) ->
               config["sensorIDs"] = if @sensorCollection[uniqueid]?.ids? then @sensorCollection[uniqueid].ids else []
               config["configMap"] = if @sensorCollection[uniqueid]?.config? then @sensorCollection[uniqueid].config else []
               config["supports"] = if @sensorCollection[uniqueid]?.supports? then @sensorCollection[uniqueid].supports else []
+              config["supportsBattery"] = @sensorCollection[uniqueid].supportsBattery if @sensorCollection[uniqueid]?.supportsBattery?
             if not @inConfig(i, @lclass)
               @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "Warning: #{config.name} - #{dev.modelid}", config )
           else
@@ -2176,13 +2186,32 @@ module.exports = (env) ->
           acronym: "tampered"
           hidden: not @tamperedEnabled
         }
+      if @config.supportsBattery
+        @_battery = lastState?.battery?.value ? 100
+        @attributes.battery = {
+          description: "Battery",
+          type: "number"
+          displaySparkline: false
+          unit: "%"
+          icon:
+            noText: true
+            mapping: {
+              'icon-battery-empty': 0
+              'icon-battery-fuel-1': [0, 20]
+              'icon-battery-fuel-2': [20, 40]
+              'icon-battery-fuel-3': [40, 60]
+              'icon-battery-fuel-4': [60, 80]
+              'icon-battery-fuel-5': [80, 100]
+              'icon-battery-filled': 100
+            }
+        }
       if "lowbattery" in @config.supports
         @_lowbattery = lastState?.lowbattery?.value ? false
         @attributes.lowbattery = {
           description: "low battery detection"
           type: "boolean"
-          labels: ['low', 'ok']
-          acronym: "battery"
+          labels: ['true', 'false']
+          acronym: "lowbattery"
         }
 
       super()
@@ -2217,6 +2246,7 @@ module.exports = (env) ->
 
     parseSensorEvent: (data)->
       #env.logger.debug "Debug raspbee-warning sensor-data: " + JSON.stringify(data,null,2)
+      @_setBattery(data.config.battery) if data.config?.battery?
       @_setTampered(data.state.tampered) if data.state?.tampered?
       @_setAlarm(data.state.alarm) if data.state?.alarm?
       @_setLowbattery(data.state.lowbattery) if data.state?.lowbattery?
@@ -2255,6 +2285,12 @@ module.exports = (env) ->
       @_lowbattery = value
       @emit 'lowbattery', value
     getLowbattery: -> Promise.resolve(@_lowbattery)
+
+    _setBattery: (value) ->
+      if @_battery is value then return
+      @_battery = value
+      @emit 'battery', value
+    getBattery: -> Promise.resolve(@_battery)
 
     changeWarningTo: (warning, time) ->
       env.logger.debug "ChangeWarningTo " + warning
