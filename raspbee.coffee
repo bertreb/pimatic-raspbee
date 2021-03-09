@@ -173,7 +173,6 @@ module.exports = (env) ->
               config["sensorIDs"] = if @sensorCollection[uniqueid]?.ids? then @sensorCollection[uniqueid].ids else []
               config["configMap"] = if @sensorCollection[uniqueid]?.config? then @sensorCollection[uniqueid].config else []
               config["supports"] = if @sensorCollection[uniqueid]?.supports? then @sensorCollection[uniqueid].supports else []
-              config["supportsBattery"] = @sensorCollection[uniqueid].supportsBattery if @sensorCollection[uniqueid]?.supportsBattery?
             if not @inConfig(i, @lclass)
               @framework.deviceManager.discoveredDevice( 'pimatic-raspbee ', "Warning: #{config.name} - #{dev.modelid}", config )
           else
@@ -2255,7 +2254,7 @@ module.exports = (env) ->
       if @_lowbattery is value then return
       @_lowbattery = value
       @emit 'lowbattery', value
-    getLowBattery: -> Promise.resolve(@_lowbattery)
+    getLowbattery: -> Promise.resolve(@_lowbattery)
 
     changeWarningTo: (warning, time) ->
       env.logger.debug "ChangeWarningTo " + warning

@@ -403,10 +403,6 @@ module.exports = {
       deviceID:
         description: "Raspbee address"
         type: "integer"
-      supportsBattery:
-        description: "does this sensor have a battery?"
-        type: "boolean"
-        default: false
       tampered:
         description: "Use the tampered option"
         type: "boolean"
