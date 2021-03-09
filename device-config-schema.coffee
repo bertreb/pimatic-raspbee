@@ -407,5 +407,30 @@ module.exports = {
         description: "Use the tampered option"
         type: "boolean"
         default: false
+      sensorIDs:
+        description: "All the ids of the sensors"
+        type: "array"
+        default: []
+        items:
+          type: "integer"
+      supports:
+        description: "Feature List"
+        type: "array"
+        default: []
+        items:
+          type: "string"
+      configMap:
+        description: "Config map"
+        type: "array"
+        default: []
+        items:
+          type:"object"
+          properties:
+            id:
+              type: "integer"
+            parameter:
+              type: "string"
+            value:
+              type: "integer"
   }
 }

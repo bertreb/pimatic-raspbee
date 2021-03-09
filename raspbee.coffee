@@ -1043,7 +1043,7 @@ module.exports = (env) ->
       @id = @config.id
       @name = @config.name
       @deviceID = @config.deviceID
-      @sensorIDs = @config.sensorIDs
+      @sensorIDs = @config.sensorIDs ? []
       @_presence = lastState?.presence?.value or false
       @_state = lastState?.state?.value or off
 
@@ -2051,7 +2051,6 @@ module.exports = (env) ->
         return Promise.reject(error)
       )
 
-
     changeLiftTo: (_lift, time) ->
       # slider 100 is fully opened, 0 is closed (dimmer slider)
       if _lift is @_position then return
@@ -2145,25 +2144,13 @@ module.exports = (env) ->
       @id = @config.id
       @name = @config.name
       @deviceID = @config.deviceID
-      @sensorIDs = @config.sensorIDs
+      @sensorIDs = @config.sensorIDs ? []
       @_presence = lastState?.presence?.value or false
       @_battery= lastState?.battery?.value or 0
       @_warning = "off" # lastState?.warning?.value ? "stop" # is warning off
       @_alarm = lastState?.alarm?.value ? false
       @_tampered = lastState?.tampered?.value ? false 
       @tamperedEnabled = @config.tampered ? false
-
-      ###
-      _sparklineDisablePosition = 
-        name: "position"
-        displaySparkline: false
-      @positionSet = false
-      for xAttr in @config.xAttributeOptions
-        if xAttr.name is "position"
-          @positionSet = true      
-      unless @positionSet 
-        @config.xAttributeOptions.push _sparklineDisablePosition
-      ###
 
       @addAttribute  'presence',
         description: "online status",
